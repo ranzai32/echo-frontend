@@ -1,0 +1,34 @@
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 8px;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+
+  span {
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--surface-soft);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.active {
+    color: var(--text-primary);
+  }
+
+  &.heart.active {
+    color: #df2f45;
+  }
+}

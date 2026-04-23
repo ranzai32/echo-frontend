@@ -1,0 +1,16 @@
+:host {
+  display: inline-flex;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}

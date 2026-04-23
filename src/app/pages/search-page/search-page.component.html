@@ -1,0 +1,39 @@
+<section class="search page-enter">
+  <header>
+    <app-icon name="search" [size]="22" />
+    <h2>Search</h2>
+  </header>
+
+  <div class="controls">
+    <input [(ngModel)]="query" placeholder="Search by text or pseudonym" />
+    <button type="button" (click)="submitSearch()">Search</button>
+  </div>
+
+  <div class="controls">
+    <input [(ngModel)]="postID" placeholder="Open post by ID" />
+    <button type="button" (click)="loadByID()">Open</button>
+  </div>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="state">Loading...</p>
+  }
+
+  @if (!loading() && results().length === 0) {
+    <p class="state">No results.</p>
+  }
+
+  @for (post of results(); track post.id) {
+    <app-post-card
+      [post]="post"
+      [currentUserID]="session.userID()"
+      [isOwnPost]="post.authorId === session.userID()"
+      [likedReplyIDs]="state.likedReplyIDs()"
+      [likedByMe]="state.likedPostIDs().has(post.id)"
+      [replies]="[]"
+    />
+  }
+</section>

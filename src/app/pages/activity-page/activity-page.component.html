@@ -1,0 +1,21 @@
+<section class="activity page-enter">
+  <header>
+    <app-icon name="activity" [size]="22" />
+    <h2>Trending</h2>
+  </header>
+
+  @if (loading()) {
+    <p class="state">Loading...</p>
+  }
+
+  @for (post of posts(); track post.id) {
+    <app-post-card
+      [post]="post"
+      [currentUserID]="session.userID()"
+      [isOwnPost]="post.authorId === session.userID()"
+      [likedReplyIDs]="state.likedReplyIDs()"
+      [likedByMe]="state.likedPostIDs().has(post.id)"
+      [replies]="[]"
+    />
+  }
+</section>

@@ -1,0 +1,4 @@
+<button class="icon-btn" type="button" [class.active]="active()" [class.heart]="icon() === 'heart'" [attr.aria-label]="label()" (click)="onClick()">
+  <app-icon [name]="icon()" [size]="18" />
+  <span>{{ label() }}</span>
+</button>

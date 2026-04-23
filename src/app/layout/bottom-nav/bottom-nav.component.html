@@ -1,0 +1,17 @@
+<nav class="bottom-nav">
+  <a routerLink="/" [routerLinkActive]="['active']" [routerLinkActiveOptions]="{ exact: true }" aria-label="home">
+    <app-icon name="home" [size]="20" />
+  </a>
+  <a routerLink="/search" routerLinkActive="active" aria-label="search">
+    <app-icon name="search" [size]="20" />
+  </a>
+  <a routerLink="/create" routerLinkActive="active" aria-label="create">
+    <app-icon name="plus" [size]="20" />
+  </a>
+  <a routerLink="/activity" routerLinkActive="active" aria-label="activity">
+    <app-icon name="activity" [size]="20" />
+  </a>
+  <a routerLink="/profile" routerLinkActive="active" aria-label="profile">
+    <app-icon name="profile" [size]="20" />
+  </a>
+</nav>

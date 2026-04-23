@@ -1,0 +1,23 @@
+.activity {
+  display: grid;
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-soft);
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+  }
+}
+
+.state {
+  margin: 0;
+  padding: 0 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}

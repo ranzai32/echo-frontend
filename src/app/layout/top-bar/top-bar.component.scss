@@ -1,0 +1,41 @@
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  backdrop-filter: blur(10px);
+  background: color-mix(in oklab, var(--bg) 84%, transparent);
+  border-bottom: 1px solid var(--border-soft);
+
+  h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .dot {
+    margin: 0 4px;
+    opacity: 0.45;
+  }
+
+  button {
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+
+    &:hover {
+      background: var(--surface-soft);
+      color: var(--text-primary);
+    }
+  }
+}

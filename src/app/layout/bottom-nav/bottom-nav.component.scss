@@ -1,0 +1,28 @@
+.bottom-nav {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  height: 64px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid var(--border-soft);
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+
+  a {
+    display: grid;
+    place-items: center;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      color: var(--text-primary);
+      transform: translateY(-1px);
+    }
+
+    &.active {
+      color: var(--text-primary);
+    }
+  }
+}

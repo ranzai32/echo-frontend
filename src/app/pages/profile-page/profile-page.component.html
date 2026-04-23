@@ -1,0 +1,42 @@
+<section class="profile page-enter">
+  <div class="header">
+    <app-avatar [pseudonym]="pseudonym()" [size]="72" />
+    <div class="meta">
+      <h2>{{ pseudonym() || 'anonymous' }}</h2>
+      <p>Anonymous account</p>
+      <p class="bio">No photos, no profile graph. Only text and ideas.</p>
+      <div class="stats">
+        <strong>{{ myPosts().length }}</strong>
+        <span>posts</span>
+        <span class="dot">·</span>
+        <strong>{{ myReplies().length }}</strong>
+        <span>replies</span>
+        <span class="dot">·</span>
+        <strong>{{ karma() }}</strong>
+        <span>karma</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button type="button" [class.active]="activeTab() === 'posts'" (click)="selectTab('posts')">Posts</button>
+    <button type="button" [class.active]="activeTab() === 'replies'" (click)="selectTab('replies')">Replies</button>
+  </div>
+
+  @if (activeTab() === 'posts') {
+    @for (post of myPosts(); track post.id) {
+      <app-post-card [post]="post" />
+    }
+  } @else {
+    @if (myReplies().length === 0) {
+      <p class="empty">No replies yet.</p>
+    }
+
+    @for (reply of myReplies(); track reply.id) {
+      <article class="reply">
+        <p>{{ reply.content }}</p>
+        <time>{{ reply.createdAt }}</time>
+      </article>
+    }
+  }
+</section>

@@ -1,0 +1,21 @@
+<section class="composer page-enter">
+  <app-avatar [pseudonym]="pseudonym()" [size]="40" />
+
+  <div class="composer-main">
+    <textarea
+      #composerBox
+      [(ngModel)]="content"
+      rows="1"
+      maxlength="280"
+      placeholder="Write a post..."
+      (input)="resize(composerBox)"
+    ></textarea>
+
+    <footer>
+      <button type="button" class="attach" aria-label="attach">
+        <app-icon name="attach" [size]="18" />
+      </button>
+      <button type="button" class="post" (click)="submit()">Post</button>
+    </footer>
+  </div>
+</section>

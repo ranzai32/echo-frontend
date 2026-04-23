@@ -1,0 +1,39 @@
+:host {
+	display: block;
+	min-height: 100dvh;
+	background: var(--bg);
+	color: var(--text-primary);
+}
+
+.app-shell {
+	min-height: 100dvh;
+	background: var(--bg);
+	color: var(--text-primary);
+}
+
+.content-shell {
+	width: min(680px, 100%);
+	margin-inline: auto;
+	background: var(--surface);
+	min-height: calc(100dvh - 56px - 64px);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
+}
+
+app-top-bar,
+app-bottom-nav {
+	display: block;
+	width: min(680px, 100%);
+	margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+	.content-shell,
+	app-top-bar,
+	app-bottom-nav {
+		border-inline: 1px solid var(--border-soft);
+	}
+
+	.content-shell {
+		border-bottom: 1px solid var(--border-soft);
+	}
+}

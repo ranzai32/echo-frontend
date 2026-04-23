@@ -1,0 +1,40 @@
+<section class="feed-page page-enter">
+  <app-post-composer [pseudonym]="session.pseudonym()" (submitted)="onCreate($event)" />
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  @if (loadingInitial()) {
+    <app-skeleton-post />
+    <app-skeleton-post />
+    <app-skeleton-post />
+  } @else {
+    @for (post of posts(); track post.id) {
+      <app-post-card
+        [post]="post"
+        [likedByMe]="likedPostIDs().has(post.id)"
+        [likedReplyIDs]="likedReplyIDs()"
+        [currentUserID]="session.userID()"
+        [isOwnPost]="post.authorId === session.userID()"
+        [replies]="repliesByPost()[post.id] ?? []"
+        (liked)="onLike($event)"
+        (replied)="onReply($event)"
+        (subReplied)="onSubReply($event)"
+        (replyUpdated)="onUpdateReply($event)"
+        (replyDeleted)="onDeleteReply({ postId: post.id, replyId: $event })"
+        (replyLiked)="onLikeReply({ postId: post.id, replyId: $event })"
+        (openReplies)="onOpenReplies($event)"
+        (postDeleted)="onDeletePost($event)"
+        (postReported)="onReportPost($event)"
+      />
+    }
+
+    @if (loadingMore()) {
+      <app-skeleton-post />
+      <app-skeleton-post />
+    }
+  }
+
+  <div #sentinel class="sentinel" aria-hidden="true"></div>
+</section>

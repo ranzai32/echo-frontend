@@ -1,0 +1,71 @@
+.composer {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface);
+}
+
+.composer-main {
+  display: grid;
+  gap: 12px;
+
+  textarea {
+    width: 100%;
+    resize: none;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 24px;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.attach {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+
+  &:hover {
+    background: var(--surface-soft);
+    color: var(--text-primary);
+  }
+}
+
+.post {
+  border: 0;
+  background: var(--text-primary);
+  color: var(--bg);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    opacity: 0.92;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
