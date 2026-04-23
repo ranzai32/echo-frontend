@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PostItem, ReplyItem } from '../../core/models/post.model';
 import { AvatarComponent } from '../avatar/avatar.component';
@@ -15,11 +15,13 @@ import { IconButtonComponent } from '../icon-button/icon-button.component';
 export class PostCardComponent {
   readonly post = input.required<PostItem>();
   readonly replies = input<ReplyItem[]>([]);
+  readonly showReplies = input(false);
   readonly likedByMe = input(false);
   readonly likedReplyIDs = input<Set<string>>(new Set<string>());
   readonly currentUserID = input('');
   readonly isOwnPost = input(false);
   readonly liked = output<string>();
+  readonly openPost = output<string>();
   readonly replied = output<{ postId: string; content: string }>();
   readonly subReplied = output<{ postId: string; parentReplyId: string; content: string }>();
   readonly replyUpdated = output<{ replyId: string; content: string }>();
@@ -36,6 +38,18 @@ export class PostCardComponent {
   replyText = '';
   editReplyText = '';
   subReplyText = '';
+
+  constructor() {
+    effect(() => {
+      if (this.showReplies()) {
+        this.showRepliesPanel.set(true);
+      }
+    }, { allowSignalWrites: true });
+  }
+
+  open(): void {
+    this.openPost.emit(this.post().id);
+  }
 
   like(): void {
     if (this.likedByMe()) {

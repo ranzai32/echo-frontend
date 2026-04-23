@@ -9,6 +9,7 @@ import {
   inject,
   signal
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { PostComposerComponent } from '../../ui/post-composer/post-composer.component';
 import { PostCardComponent } from '../../ui/post-card/post-card.component';
 import { SkeletonPostComponent } from '../../ui/skeleton-post/skeleton-post.component';
@@ -39,6 +40,8 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly repliesByPost = signal<Partial<Record<string, ReplyItem[]>>>({});
 
   private observer?: IntersectionObserver;
+
+  constructor(private readonly router: Router) {}
 
   async ngOnInit(): Promise<void> {
     await this.state.init();
@@ -114,5 +117,9 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       return { ...items, [event.postId]: next };
     });
+  }
+
+  openPost(postID: string): void {
+    void this.router.navigate(['/post', postID]);
   }
 }

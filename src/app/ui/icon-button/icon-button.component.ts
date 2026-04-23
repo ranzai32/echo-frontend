@@ -15,7 +15,8 @@ export class IconButtonComponent {
   readonly active = input(false);
   readonly clicked = output<void>();
 
-  onClick(): void {
+  onClick(event: MouseEvent): void {
+    event.stopPropagation();
     this.clicked.emit();
   }
 }

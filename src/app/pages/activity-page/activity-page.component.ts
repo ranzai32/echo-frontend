@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { IconComponent } from '../../ui/icon/icon.component';
 import { PostCardComponent } from '../../ui/post-card/post-card.component';
 import { FeedStateService } from '../../core/services/feed-state.service';
@@ -20,10 +21,16 @@ export class ActivityPageComponent implements OnInit {
   readonly posts = signal<PostItem[]>([]);
   readonly loading = signal(true);
 
+  constructor(private readonly router: Router) {}
+
   async ngOnInit(): Promise<void> {
     await this.session.ensureSession();
     const items = await this.state.trending(20);
     this.posts.set(items);
     this.loading.set(false);
+  }
+
+  openPost(postID: string): void {
+    void this.router.navigate(['/post', postID]);
   }
 }

@@ -6,6 +6,18 @@
   background: var(--surface);
 }
 
+.post-link {
+  display: grid;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.post-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--text-primary) 18%, transparent);
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+
 .post-head {
   display: flex;
   align-items: center;

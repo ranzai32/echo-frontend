@@ -1,0 +1,47 @@
+.post-detail {
+  display: grid;
+  gap: 12px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-soft);
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  p {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+}
+
+.back {
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.state,
+.error {
+  margin: 0;
+  padding: 0 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.error {
+  color: #c44;
+}

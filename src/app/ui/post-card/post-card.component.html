@@ -1,15 +1,17 @@
 <article class="post-card page-enter">
-  <div class="post-head">
-    <app-avatar [pseudonym]="post().pseudonym" [size]="40" />
-    <div class="post-meta">
-      <div class="identity">
-        <strong>{{ post().pseudonym }}</strong>
+  <div class="post-link" role="button" tabindex="0" (click)="open()" (keydown.enter)="open()">
+    <div class="post-head">
+      <app-avatar [pseudonym]="post().pseudonym" [size]="40" />
+      <div class="post-meta">
+        <div class="identity">
+          <strong>{{ post().pseudonym }}</strong>
+        </div>
+        <time>{{ post().createdAt }}</time>
       </div>
-      <time>{{ post().createdAt }}</time>
     </div>
-  </div>
 
-  <p class="content">{{ post().content }}</p>
+    <p class="content">{{ post().content }}</p>
+  </div>
 
   <div class="post-actions">
     <app-icon-button icon="heart" label="{{ post().score }}" [active]="likedByMe()" (clicked)="like()" />

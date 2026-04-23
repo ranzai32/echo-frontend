@@ -18,6 +18,7 @@
         [currentUserID]="session.userID()"
         [isOwnPost]="post.authorId === session.userID()"
         [replies]="repliesByPost()[post.id] ?? []"
+        (openPost)="openPost($event)"
         (liked)="onLike($event)"
         (replied)="onReply($event)"
         (subReplied)="onSubReply($event)"

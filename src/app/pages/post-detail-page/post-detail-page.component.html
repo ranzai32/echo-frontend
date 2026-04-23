@@ -1,0 +1,33 @@
+<section class="post-detail page-enter">
+  <header class="toolbar">
+    <button type="button" class="back" (click)="back()">← Back</button>
+    <div>
+      <h2>Post</h2>
+      <p>Open view with replies</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="state">Loading...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (post()) {
+    <app-post-card
+      [post]="post()!"
+      [likedByMe]="state.likedPostIDs().has(post()!.id)"
+      [likedReplyIDs]="state.likedReplyIDs()"
+      [currentUserID]="session.userID()"
+      [isOwnPost]="post()!.authorId === session.userID()"
+      [replies]="replies()"
+      [showReplies]="true"
+      (liked)="onLike()"
+      (replied)="onReply($event)"
+      (subReplied)="onSubReply($event)"
+      (replyUpdated)="onUpdateReply($event)"
+      (replyDeleted)="onDeleteReply({ postId: post()!.id, replyId: $event })"
+      (replyLiked)="onLikeReply({ postId: post()!.id, replyId: $event })"
+      (postDeleted)="onDeletePost($event)"
+      (postReported)="onReportPost($event)"
+    />
+  }
+</section>

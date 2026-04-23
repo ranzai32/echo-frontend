@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../ui/icon/icon.component';
 import { PostCardComponent } from '../../ui/post-card/post-card.component';
@@ -23,6 +24,8 @@ export class SearchPageComponent implements OnInit {
   readonly loading = signal(false);
   readonly results = signal<PostItem[]>([]);
   readonly error = signal('');
+
+  constructor(private readonly router: Router) {}
 
   async ngOnInit(): Promise<void> {
     await this.session.ensureSession();
@@ -63,5 +66,9 @@ export class SearchPageComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  openPost(postID: string): void {
+    void this.router.navigate(['/post', postID]);
   }
 }
