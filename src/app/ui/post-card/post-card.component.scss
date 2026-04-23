@@ -172,3 +172,129 @@
 .reply-box.nested {
   margin-top: 4px;
 }
+
+.report-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: color-mix(in srgb, var(--text-primary) 56%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.report-modal {
+  width: min(100%, 420px);
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+}
+
+.report-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  h3,
+  p {
+    margin: 0;
+  }
+}
+
+.eyebrow {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.close-btn {
+  border: 0;
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.report-copy {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.reason-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reason-pill {
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.active {
+    color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--text-primary) 20%, var(--border-soft));
+    background: color-mix(in srgb, var(--text-primary) 8%, var(--surface-soft));
+  }
+}
+
+.report-modal textarea {
+  border: 1px solid var(--border-soft);
+  background: var(--surface-soft);
+  border-radius: 16px;
+  padding: 12px;
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 96px;
+}
+
+.report-error {
+  margin: 0;
+  color: #c44;
+  font-size: 13px;
+}
+
+.report-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  button {
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight: 700;
+  }
+
+  .secondary {
+    background: var(--surface-soft);
+    color: var(--text-primary);
+  }
+
+  .primary {
+    background: var(--text-primary);
+    color: var(--bg);
+  }
+
+  .primary:disabled {
+    opacity: 0.7;
+  }
+}

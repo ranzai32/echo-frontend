@@ -88,4 +88,60 @@
       }
     </div>
   }
+
+  @if (reportDialogOpen()) {
+    <div class="report-backdrop" role="presentation" (click)="closeReportDialog()">
+      <section
+        class="report-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="report-header">
+          <div>
+            <p class="eyebrow">Report post</p>
+            <h3 id="report-title">Help keep echo safe</h3>
+          </div>
+
+          <button type="button" class="close-btn" aria-label="Close report dialog" (click)="closeReportDialog()">
+            ×
+          </button>
+        </div>
+
+        <p class="report-copy">Choose a reason below or add a short note. Reports are reviewed anonymously.</p>
+
+        <div class="reason-grid">
+          @for (reason of reportReasons; track reason) {
+            <button
+              type="button"
+              class="reason-pill"
+              [class.active]="reportReason === reason"
+              (click)="pickReportReason(reason)"
+            >
+              {{ reason }}
+            </button>
+          }
+        </div>
+
+        <textarea
+          [(ngModel)]="reportReason"
+          rows="4"
+          maxlength="500"
+          placeholder="Add more detail if you want"
+        ></textarea>
+
+        @if (reportError()) {
+          <p class="report-error">{{ reportError() }}</p>
+        }
+
+        <div class="report-actions">
+          <button type="button" class="secondary" (click)="closeReportDialog()">Cancel</button>
+          <button type="button" class="primary" [disabled]="reportSubmitting()" (click)="submitReport()">
+            {{ reportSubmitting() ? 'Sending...' : 'Send report' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
 </article>

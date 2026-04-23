@@ -33,11 +33,24 @@ export class PostCardComponent {
 
   readonly replying = signal(false);
   readonly showRepliesPanel = signal(false);
+  readonly reportDialogOpen = signal(false);
+  readonly reportSubmitting = signal(false);
+  readonly reportError = signal('');
   readonly editingReplyID = signal('');
   readonly activeSubReplyParentID = signal('');
   replyText = '';
   editReplyText = '';
   subReplyText = '';
+  reportReason = '';
+
+  readonly reportReasons = [
+    'Spam or phishing',
+    'Harassment or abuse',
+    'Hate or discrimination',
+    'Misinformation',
+    'Illegal or harmful content',
+    'Other'
+  ];
 
   constructor() {
     effect(() => {
@@ -81,12 +94,31 @@ export class PostCardComponent {
   }
 
   reportPost(): void {
-    const reason = prompt('Report reason (max 500 chars):')?.trim() ?? '';
+    this.reportError.set('');
+    this.reportDialogOpen.set(true);
+  }
+
+  closeReportDialog(): void {
+    this.reportDialogOpen.set(false);
+    this.reportSubmitting.set(false);
+    this.reportError.set('');
+    this.reportReason = '';
+  }
+
+  pickReportReason(reason: string): void {
+    this.reportReason = reason;
+  }
+
+  submitReport(): void {
+    const reason = this.reportReason.trim();
     if (!reason) {
+      this.reportError.set('Please choose or enter a reason.');
       return;
     }
 
+    this.reportSubmitting.set(true);
     this.postReported.emit({ postId: this.post().id, reason });
+    this.closeReportDialog();
   }
 
   isOwnReply(reply: ReplyItem): boolean {
