@@ -31,8 +31,10 @@ ng generate --help
 To build the project run:
 
 ```bash
-ng build
+npm run build
 ```
+
+Production uses `src/environments/environment.prod.ts` (API/APP URLs for VPS). Local dev keeps `environment.ts` (`localhost:8080`).
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
