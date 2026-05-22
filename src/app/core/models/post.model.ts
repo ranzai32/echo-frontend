@@ -21,6 +21,7 @@ export interface ReplyItem {
   content: string;
   score: number;
   createdAt: string;
+  children?: ReplyItem[];
 }
 
 export interface FeedLatestResponse {

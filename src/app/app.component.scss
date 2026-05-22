@@ -15,7 +15,9 @@
 	width: min(680px, 100%);
 	margin-inline: auto;
 	background: var(--surface);
-	min-height: calc(100dvh - 56px - 64px);
+	min-height: 100dvh;
+	padding-top: 56px;
+	padding-bottom: 64px;
 	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
 }
 

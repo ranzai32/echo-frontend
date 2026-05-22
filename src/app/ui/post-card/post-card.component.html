@@ -6,7 +6,7 @@
         <div class="identity">
           <strong>{{ post().pseudonym }}</strong>
         </div>
-        <time>{{ post().createdAt }}</time>
+        <time>{{ post().createdAt | date:'d MMM yyyy, HH:mm' }}</time>
       </div>
     </div>
 
@@ -35,59 +35,52 @@
         <p class="empty">No replies yet.</p>
       }
 
-      @for (reply of directReplies(); track reply.id) {
-        <article class="reply-item">
-          <div class="reply-head">
-            <strong>{{ reply.pseudonym }}</strong>
-            <span>{{ reply.createdAt }}</span>
-          </div>
-
-          @if (editingReplyID() === reply.id) {
-            <textarea [(ngModel)]="editReplyText" rows="2" maxlength="280"></textarea>
-            <div class="reply-controls">
-              <button type="button" (click)="saveEdit(reply.id)">Save</button>
-              <button type="button" class="ghost" (click)="cancelEdit()">Cancel</button>
-            </div>
-          } @else {
-            <p>{{ reply.content }}</p>
-          }
-
-          <div class="reply-actions">
-            <app-icon-button icon="heart" label="{{ reply.score }}" [active]="likedReplyIDs().has(reply.id)" (clicked)="likeReply(reply.id)" />
-            <app-icon-button icon="reply" label="reply" (clicked)="toggleSubReply(reply.id)" />
-            @if (isOwnReply(reply)) {
-              <app-icon-button icon="pencil" label="edit" (clicked)="startEdit(reply)" />
-              <app-icon-button icon="trash" label="delete" (clicked)="removeReply(reply.id)" />
-            }
-          </div>
-
-          @if (activeSubReplyParentID() === reply.id) {
-            <div class="reply-box nested">
-              <textarea [(ngModel)]="subReplyText" rows="2" maxlength="280" placeholder="Reply to comment"></textarea>
-              <button type="button" (click)="submitSubReply(reply.id)">Reply</button>
-            </div>
-          }
-
-          @for (child of directReplies(reply.id); track child.id) {
-            <article class="reply-item child">
-              <div class="reply-head">
-                <strong>{{ child.pseudonym }}</strong>
-                <span>{{ child.createdAt }}</span>
-              </div>
-              <p>{{ child.content }}</p>
-              <div class="reply-actions">
-                <app-icon-button icon="heart" label="{{ child.score }}" [active]="likedReplyIDs().has(child.id)" (clicked)="likeReply(child.id)" />
-                @if (isOwnReply(child)) {
-                  <app-icon-button icon="pencil" label="edit" (clicked)="startEdit(child)" />
-                  <app-icon-button icon="trash" label="delete" (clicked)="removeReply(child.id)" />
-                }
-              </div>
-            </article>
-          }
-        </article>
-      }
+      <ng-container *ngTemplateOutlet="replyTree; context: { $implicit: replies(), depth: 0 }"></ng-container>
     </div>
   }
+
+  <ng-template #replyTree let-items let-depth="depth">
+    @for (reply of items; track reply.id) {
+      <article class="reply-item" [style.--depth]="depth">
+        <div class="reply-head">
+          <strong>{{ reply.pseudonym }}</strong>
+          <span>{{ reply.createdAt | date:'d MMM yyyy, HH:mm' }}</span>
+        </div>
+
+        @if (editingReplyID() === reply.id) {
+          <textarea [(ngModel)]="editReplyText" rows="2" maxlength="280"></textarea>
+          <div class="reply-controls">
+            <button type="button" (click)="saveEdit(reply.id)">Save</button>
+            <button type="button" class="ghost" (click)="cancelEdit()">Cancel</button>
+          </div>
+        } @else {
+          <p>{{ reply.content }}</p>
+        }
+
+        <div class="reply-actions">
+          <app-icon-button icon="heart" label="{{ reply.score }}" [active]="likedReplyIDs().has(reply.id)" (clicked)="likeReply(reply.id)" />
+          <app-icon-button icon="reply" label="reply" (clicked)="toggleSubReply(reply.id)" />
+          @if (isOwnReply(reply)) {
+            <app-icon-button icon="pencil" label="edit" (clicked)="startEdit(reply)" />
+            <app-icon-button icon="trash" label="delete" (clicked)="removeReply(reply.id)" />
+          }
+        </div>
+
+        @if (activeSubReplyParentID() === reply.id) {
+          <div class="reply-box nested">
+            <textarea [(ngModel)]="subReplyText" rows="2" maxlength="280" placeholder="Reply to comment"></textarea>
+            <button type="button" (click)="submitSubReply(reply.id)">Reply</button>
+          </div>
+        }
+
+        @if (reply.children?.length) {
+          <div class="reply-children">
+            <ng-container *ngTemplateOutlet="replyTree; context: { $implicit: reply.children, depth: depth + 1 }"></ng-container>
+          </div>
+        }
+      </article>
+    }
+  </ng-template>
 
   @if (reportDialogOpen()) {
     <div class="report-backdrop" role="presentation" (click)="closeReportDialog()">
