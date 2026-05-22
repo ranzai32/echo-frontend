@@ -191,9 +191,9 @@ export class ApiService {
     );
   }
 
-  reportPost(token: string, postId: string, reason: string): Promise<{ ok: boolean; auto_hidden: boolean }> {
+  reportPost(token: string, postId: string, reason: string): Promise<{ ok: boolean; autoHidden: boolean }> {
     return firstValueFrom(
-      this.http.post<{ ok: boolean; auto_hidden: boolean }>(
+      this.http.post<{ ok: boolean; autoHidden: boolean }>(
         `${this.apiBaseUrl}/posts/${postId}/report`,
         { reason },
         { headers: this.authHeaders(token) }
