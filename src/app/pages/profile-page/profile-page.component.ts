@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { AvatarComponent } from '../../ui/avatar/avatar.component';
 import { PostCardComponent } from '../../ui/post-card/post-card.component';
 import { FeedTab } from '../../core/models/post.model';
@@ -8,7 +9,7 @@ import { FeedStateService } from '../../core/services/feed-state.service';
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [AvatarComponent, PostCardComponent],
+  imports: [AvatarComponent, PostCardComponent, DatePipe],
   templateUrl: './profile-page.component.html',
   styleUrl: './profile-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

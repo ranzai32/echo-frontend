@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { SessionService } from './session.service';
-import { PostItem, ReplyItem } from '../models/post.model';
+import { PostCreatePayload, PostItem, ReplyItem } from '../models/post.model';
 
 const SEEDED_KEY = 'echo.seeded';
 
@@ -66,13 +66,13 @@ export class FeedStateService {
     }
   }
 
-  async createPost(content: string): Promise<void> {
-    const trimmed = content.trim();
+  async createPost(payload: PostCreatePayload): Promise<void> {
+    const trimmed = payload.content.trim();
     if (!trimmed) {
       return;
     }
 
-    const created = await this.api.createPost(this.session.token(), trimmed);
+    const created = await this.api.createPost(this.session.token(), { content: trimmed, file: payload.file });
     this.prependUnique(created);
   }
 
@@ -121,7 +121,10 @@ export class FeedStateService {
       throw new Error('empty content');
     }
 
-    return this.api.createSubReply(this.session.token(), postId, parentReplyId, trimmed);
+    const created = await this.api.createSubReply(this.session.token(), postId, parentReplyId, trimmed);
+    this.myReplies.update((items) => [created, ...items]);
+    this.posts.update((items) => items.map((p) => (p.id === postId ? { ...p, replyCount: p.replyCount + 1 } : p)));
+    return created;
   }
 
   async updateReply(replyId: string, content: string): Promise<ReplyItem> {
@@ -138,6 +141,11 @@ export class FeedStateService {
   async deleteReply(replyId: string): Promise<void> {
     await this.api.deleteReply(this.session.token(), replyId);
     this.myReplies.update((items) => items.filter((item) => item.id !== replyId));
+  }
+
+  async refreshPost(postId: string): Promise<void> {
+    const post = await this.getPost(postId);
+    this.posts.update((items) => items.map((item) => (item.id === postId ? post : item)));
   }
 
   async reactReplyUpvote(replyId: string): Promise<void> {
@@ -173,8 +181,35 @@ export class FeedStateService {
   }
 
   async fetchReplies(postId: string): Promise<ReplyItem[]> {
-    const data = await this.api.listReplies(postId, 20);
-    return data.replies;
+    const data = await this.api.listReplies(postId, 100);
+    return this.buildReplyTree(data.replies);
+  }
+
+  private buildReplyTree(replies: ReplyItem[]): ReplyItem[] {
+    if (replies.length === 0) {
+      return replies;
+    }
+
+    if (replies.some((reply) => (reply.children?.length ?? 0) > 0)) {
+      return replies;
+    }
+
+    const nodes = new Map<string, ReplyItem>();
+    for (const reply of replies) {
+      nodes.set(reply.id, { ...reply, children: [] });
+    }
+
+    const roots: ReplyItem[] = [];
+    for (const reply of replies) {
+      const node = nodes.get(reply.id)!;
+      if (reply.parentReplyId && nodes.has(reply.parentReplyId)) {
+        nodes.get(reply.parentReplyId)!.children!.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+
+    return roots;
   }
 
   private async loadLatest(reset: boolean): Promise<void> {
@@ -233,7 +268,7 @@ export class FeedStateService {
 
     for (const content of contents) {
       const auth = await this.api.register();
-      await this.api.createPost(auth.token, content);
+      await this.api.createPost(auth.token, { content });
     }
 
     if (typeof localStorage !== 'undefined') {

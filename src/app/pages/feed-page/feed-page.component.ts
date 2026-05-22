@@ -15,7 +15,7 @@ import { PostCardComponent } from '../../ui/post-card/post-card.component';
 import { SkeletonPostComponent } from '../../ui/skeleton-post/skeleton-post.component';
 import { FeedStateService } from '../../core/services/feed-state.service';
 import { SessionService } from '../../core/services/session.service';
-import { ReplyItem } from '../../core/models/post.model';
+import { PostCreatePayload, ReplyItem } from '../../core/models/post.model';
 
 @Component({
   selector: 'app-feed-page',
@@ -68,8 +68,8 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.observer?.disconnect();
   }
 
-  async onCreate(content: string): Promise<void> {
-    await this.state.createPost(content);
+  async onCreate(payload: PostCreatePayload): Promise<void> {
+    await this.state.createPost(payload);
   }
 
   async onLike(postID: string): Promise<void> {
@@ -97,6 +97,7 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
   async onSubReply(event: { postId: string; parentReplyId: string; content: string }): Promise<void> {
     await this.state.createSubReply(event.postId, event.parentReplyId, event.content);
     await this.onOpenReplies(event.postId);
+    await this.state.refreshPost(event.postId);
   }
 
   async onUpdateReply(event: { replyId: string; content: string }): Promise<void> {
@@ -107,6 +108,7 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
   async onDeleteReply(event: { postId: string; replyId: string }): Promise<void> {
     await this.state.deleteReply(event.replyId);
     await this.onOpenReplies(event.postId);
+    await this.state.refreshPost(event.postId);
   }
 
   async onLikeReply(event: { postId: string; replyId: string }): Promise<void> {

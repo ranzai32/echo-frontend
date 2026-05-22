@@ -7,9 +7,24 @@ export interface PostItem {
   authorId: string;
   pseudonym: string;
   content: string;
+  attachment?: PostAttachment;
   replyCount: number;
   score: number;
   createdAt: string;
+}
+
+export interface PostAttachment {
+  id: string;
+  postId: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+  createdAt: string;
+}
+
+export interface PostCreatePayload {
+  content: string;
+  file?: File;
 }
 
 export interface ReplyItem {
@@ -21,6 +36,7 @@ export interface ReplyItem {
   content: string;
   score: number;
   createdAt: string;
+  children?: ReplyItem[];
 }
 
 export interface FeedLatestResponse {

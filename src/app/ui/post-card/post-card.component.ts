@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal } from '@angular/core';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PostItem, ReplyItem } from '../../core/models/post.model';
+import { ApiService } from '../../core/services/api.service';
 import { ShareService } from '../../core/services/share.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { IconButtonComponent } from '../icon-button/icon-button.component';
@@ -9,7 +11,7 @@ import { IconComponent } from '../icon/icon.component';
 @Component({
   selector: 'app-post-card',
   standalone: true,
-  imports: [FormsModule, AvatarComponent, IconButtonComponent, IconComponent],
+  imports: [FormsModule, AvatarComponent, IconButtonComponent, IconComponent, NgTemplateOutlet, DatePipe],
   templateUrl: './post-card.component.html',
   styleUrl: './post-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -63,12 +65,28 @@ export class PostCardComponent {
     'Other'
   ];
 
-  constructor() {
+  constructor(private readonly api: ApiService) {
     effect(() => {
       if (this.showReplies()) {
         this.showRepliesPanel.set(true);
       }
     }, { allowSignalWrites: true });
+  }
+
+  attachmentUrl(id: string): string {
+    return this.api.attachmentUrl(id);
+  }
+
+  isImage(contentType: string): boolean {
+    return contentType.startsWith('image/');
+  }
+
+  formatSize(size: number): string {
+    if (size >= 1024 * 1024) {
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
   }
 
   open(): void {
@@ -211,9 +229,7 @@ export class PostCardComponent {
     return reply.authorId === this.currentUserID();
   }
 
-  directReplies(parentReplyID?: string): ReplyItem[] {
-    return this.replies().filter((reply) => (reply.parentReplyId ?? '') === (parentReplyID ?? ''));
-  }
+
 
   startEdit(reply: ReplyItem): void {
     this.editingReplyID.set(reply.id);
