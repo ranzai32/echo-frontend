@@ -1,6 +1,9 @@
 .top-bar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(680px, 100%);
   z-index: 20;
   height: 56px;
   display: flex;

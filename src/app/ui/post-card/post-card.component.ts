@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PostItem, ReplyItem } from '../../core/models/post.model';
 import { ApiService } from '../../core/services/api.service';
@@ -8,7 +9,7 @@ import { IconButtonComponent } from '../icon-button/icon-button.component';
 @Component({
   selector: 'app-post-card',
   standalone: true,
-  imports: [FormsModule, AvatarComponent, IconButtonComponent],
+  imports: [FormsModule, AvatarComponent, IconButtonComponent, NgTemplateOutlet, DatePipe],
   templateUrl: './post-card.component.html',
   styleUrl: './post-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -142,9 +143,7 @@ export class PostCardComponent {
     return reply.authorId === this.currentUserID();
   }
 
-  directReplies(parentReplyID?: string): ReplyItem[] {
-    return this.replies().filter((reply) => (reply.parentReplyId ?? '') === (parentReplyID ?? ''));
-  }
+
 
   startEdit(reply: ReplyItem): void {
     this.editingReplyID.set(reply.id);

@@ -97,6 +97,7 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
   async onSubReply(event: { postId: string; parentReplyId: string; content: string }): Promise<void> {
     await this.state.createSubReply(event.postId, event.parentReplyId, event.content);
     await this.onOpenReplies(event.postId);
+    await this.state.refreshPost(event.postId);
   }
 
   async onUpdateReply(event: { replyId: string; content: string }): Promise<void> {
@@ -107,6 +108,7 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
   async onDeleteReply(event: { postId: string; replyId: string }): Promise<void> {
     await this.state.deleteReply(event.replyId);
     await this.onOpenReplies(event.postId);
+    await this.state.refreshPost(event.postId);
   }
 
   async onLikeReply(event: { postId: string; replyId: string }): Promise<void> {

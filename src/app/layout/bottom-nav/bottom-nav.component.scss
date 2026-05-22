@@ -1,6 +1,9 @@
 .bottom-nav {
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(680px, 100%);
   z-index: 20;
   height: 64px;
   display: grid;

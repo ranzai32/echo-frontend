@@ -35,7 +35,7 @@
     @for (reply of myReplies(); track reply.id) {
       <article class="reply">
         <p>{{ reply.content }}</p>
-        <time>{{ reply.createdAt }}</time>
+        <time>{{ reply.createdAt | date:'d MMM yyyy, HH:mm' }}</time>
       </article>
     }
   }
