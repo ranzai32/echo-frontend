@@ -1,0 +1,9 @@
+<span class="emoji-content">
+  @for (part of parts(); track $index) {
+    @if (part.type === 'text') {
+      <span>{{ part.value }}</span>
+    } @else {
+      <img class="emoji-inline" [src]="url(part.code)" [alt]="':' + part.code + ':'" width="24" height="24" loading="lazy" />
+    }
+  }
+</span>

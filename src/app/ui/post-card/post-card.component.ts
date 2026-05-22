@@ -1,17 +1,29 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal } from '@angular/core';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { insertEmojiToken } from '../../core/emoji/emoji-text';
 import { PostItem, ReplyItem } from '../../core/models/post.model';
 import { ApiService } from '../../core/services/api.service';
 import { ShareService } from '../../core/services/share.service';
 import { AvatarComponent } from '../avatar/avatar.component';
+import { EmojiContentComponent } from '../emoji-content/emoji-content.component';
+import { EmojiPickerComponent } from '../emoji-picker/emoji-picker.component';
 import { IconButtonComponent } from '../icon-button/icon-button.component';
 import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-post-card',
   standalone: true,
-  imports: [FormsModule, AvatarComponent, IconButtonComponent, IconComponent, NgTemplateOutlet, DatePipe],
+  imports: [
+    FormsModule,
+    AvatarComponent,
+    EmojiContentComponent,
+    EmojiPickerComponent,
+    IconButtonComponent,
+    IconComponent,
+    NgTemplateOutlet,
+    DatePipe
+  ],
   templateUrl: './post-card.component.html',
   styleUrl: './post-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -253,6 +265,41 @@ export class PostCardComponent {
 
   likeReply(replyID: string): void {
     this.replyLiked.emit(replyID);
+  }
+
+  insertReplyEmoji(token: string, textarea: HTMLTextAreaElement): void {
+    this.insertIntoField(this.replyText, token, textarea, (value) => {
+      this.replyText = value;
+    });
+  }
+
+  insertSubReplyEmoji(token: string, textarea: HTMLTextAreaElement): void {
+    this.insertIntoField(this.subReplyText, token, textarea, (value) => {
+      this.subReplyText = value;
+    });
+  }
+
+  insertEditReplyEmoji(token: string, textarea: HTMLTextAreaElement): void {
+    this.insertIntoField(this.editReplyText, token, textarea, (value) => {
+      this.editReplyText = value;
+    });
+  }
+
+  private insertIntoField(
+    current: string,
+    token: string,
+    textarea: HTMLTextAreaElement,
+    apply: (value: string) => void
+  ): void {
+    const start = textarea.selectionStart ?? current.length;
+    const end = textarea.selectionEnd ?? start;
+    const next = insertEmojiToken(current, token, start, end);
+    apply(next.value);
+
+    queueMicrotask(() => {
+      textarea.focus();
+      textarea.setSelectionRange(next.caret, next.caret);
+    });
   }
 
   toggleSubReply(replyID: string): void {

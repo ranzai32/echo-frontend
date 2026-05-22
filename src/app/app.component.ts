@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TopBarComponent } from './layout/top-bar/top-bar.component';
 import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -11,9 +12,10 @@ import { BottomNavComponent } from './layout/bottom-nav/bottom-nav.component';
 })
 export class AppComponent {
   readonly title = 'echo-frontend';
-  readonly dark = signal(false);
+  readonly theme = inject(ThemeService);
+  readonly dark = this.theme.dark;
 
   toggleTheme(): void {
-    this.dark.update((value) => !value);
+    this.theme.toggle();
   }
 }

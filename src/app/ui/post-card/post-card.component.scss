@@ -323,7 +323,14 @@
     min-height: 64px;
   }
 
-  button {
+  .reply-box-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  button:not(.emoji-trigger) {
     justify-self: end;
     border: 0;
     border-radius: 999px;

@@ -12,10 +12,13 @@
     ></textarea>
 
     <footer>
-      <label class="attach" aria-label="attach file">
-        <app-icon name="attach" [size]="18" />
-        <input type="file" (change)="selectFile($event)" />
-      </label>
+      <div class="composer-tools">
+        <app-emoji-picker (picked)="insertEmoji($event, composerBox)" />
+        <label class="attach" aria-label="attach file">
+          <app-icon name="attach" [size]="18" />
+          <input type="file" (change)="selectFile($event)" />
+        </label>
+      </div>
       <button type="button" class="post" (click)="submit()">Post</button>
     </footer>
 

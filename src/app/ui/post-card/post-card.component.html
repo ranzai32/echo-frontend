@@ -10,7 +10,7 @@
       </div>
     </div>
 
-    <p class="content">{{ post().content }}</p>
+    <p class="content"><app-emoji-content [text]="post().content" /></p>
 
     @if (post().attachment; as attachment) {
       <a
@@ -44,8 +44,11 @@
 
   @if (replying()) {
     <div class="reply-box">
-      <textarea [(ngModel)]="replyText" rows="2" maxlength="280" placeholder="Write anonymous reply"></textarea>
-      <button type="button" (click)="submitReply()">Reply</button>
+      <textarea #replyBox [(ngModel)]="replyText" rows="2" maxlength="280" placeholder="Write anonymous reply"></textarea>
+      <div class="reply-box-actions">
+        <app-emoji-picker (picked)="insertReplyEmoji($event, replyBox)" />
+        <button type="button" (click)="submitReply()">Reply</button>
+      </div>
     </div>
   }
 
@@ -68,13 +71,14 @@
         </div>
 
         @if (editingReplyID() === reply.id) {
-          <textarea [(ngModel)]="editReplyText" rows="2" maxlength="280"></textarea>
+          <textarea #editReplyBox [(ngModel)]="editReplyText" rows="2" maxlength="280"></textarea>
           <div class="reply-controls">
+            <app-emoji-picker (picked)="insertEditReplyEmoji($event, editReplyBox)" />
             <button type="button" (click)="saveEdit(reply.id)">Save</button>
             <button type="button" class="ghost" (click)="cancelEdit()">Cancel</button>
           </div>
         } @else {
-          <p>{{ reply.content }}</p>
+          <p><app-emoji-content [text]="reply.content" /></p>
         }
 
         <div class="reply-actions">
@@ -88,8 +92,11 @@
 
         @if (activeSubReplyParentID() === reply.id) {
           <div class="reply-box nested">
-            <textarea [(ngModel)]="subReplyText" rows="2" maxlength="280" placeholder="Reply to comment"></textarea>
-            <button type="button" (click)="submitSubReply(reply.id)">Reply</button>
+            <textarea #subReplyBox [(ngModel)]="subReplyText" rows="2" maxlength="280" placeholder="Reply to comment"></textarea>
+            <div class="reply-box-actions">
+              <app-emoji-picker (picked)="insertSubReplyEmoji($event, subReplyBox)" />
+              <button type="button" (click)="submitSubReply(reply.id)">Reply</button>
+            </div>
           </div>
         }
 

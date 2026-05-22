@@ -36,6 +36,8 @@ npm run build
 
 Production uses `src/environments/environment.prod.ts` (API/APP URLs for VPS). Local dev keeps `environment.ts` (`localhost:8080`).
 
+ICQ-style emoticons live in `public/emojis/` (light/dark skins). In posts and replies, pick them with the ☺ button; they are stored as tokens like `:biggrin:` and rendered as GIFs.
+
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
 ## Running unit tests
