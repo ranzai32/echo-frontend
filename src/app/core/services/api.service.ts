@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import {
   FeedLatestResponse,
@@ -21,6 +21,11 @@ interface AuthRefreshResponse {
   token: string;
 }
 
+interface SharePostResponse {
+  url: string;
+  postId: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly apiBaseUrl = environment.apiBaseUrl;
@@ -32,20 +37,23 @@ export class ApiService {
   }
 
   refresh(token: string): Promise<AuthRefreshResponse> {
-    return firstValueFrom(this.http.post<AuthRefreshResponse>(`${this.apiBaseUrl}/auth/refresh`, { token }));
-  }
-
-  latest(limit: number, cursor = ''): Promise<FeedLatestResponse> {
     return firstValueFrom(
-      this.http.post<FeedLatestResponse>(`${this.apiBaseUrl}/feed/latest`, {
-        limit,
-        cursor
-      })
+      this.http.post<AuthRefreshResponse>(`${this.apiBaseUrl}/auth/refresh`, {}, { headers: this.authHeaders(token) })
     );
   }
 
+  latest(limit: number, cursor = ''): Promise<FeedLatestResponse> {
+    let params = new HttpParams().set('limit', String(limit));
+    if (cursor) {
+      params = params.set('cursor', cursor);
+    }
+
+    return firstValueFrom(this.http.get<FeedLatestResponse>(`${this.apiBaseUrl}/feed/latest`, { params }));
+  }
+
   trending(limit: number): Promise<FeedTrendingResponse> {
-    return firstValueFrom(this.http.post<FeedTrendingResponse>(`${this.apiBaseUrl}/feed/trending`, { limit }));
+    const params = new HttpParams().set('limit', String(limit));
+    return firstValueFrom(this.http.get<FeedTrendingResponse>(`${this.apiBaseUrl}/feed/trending`, { params }));
   }
 
   createPost(token: string, content: string): Promise<PostItem> {
@@ -55,7 +63,13 @@ export class ApiService {
   }
 
   getPost(id: string): Promise<PostItem> {
-    return firstValueFrom(this.http.post<PostItem>(`${this.apiBaseUrl}/posts/get`, { id }));
+    return firstValueFrom(this.http.get<PostItem>(`${this.apiBaseUrl}/posts/${id}`));
+  }
+
+  getShareUrl(postId: string): Promise<string> {
+    return firstValueFrom(this.http.get<SharePostResponse>(`${this.apiBaseUrl}/posts/${postId}/share`)).then(
+      (response) => response.url
+    );
   }
 
   searchPosts(query: string, limit = 20): Promise<SearchPostsResponse> {
@@ -64,27 +78,30 @@ export class ApiService {
 
   deletePost(token: string, id: string): Promise<{ ok: boolean }> {
     return firstValueFrom(
-      this.http.post<{ ok: boolean }>(`${this.apiBaseUrl}/posts/delete`, { id }, { headers: this.authHeaders(token) })
+      this.http.delete<{ ok: boolean }>(`${this.apiBaseUrl}/posts/${id}`, { headers: this.authHeaders(token) })
     );
   }
 
   react(token: string, postId: string, kind: ReactionKind): Promise<{ ok: boolean }> {
     return firstValueFrom(
-      this.http.post<{ ok: boolean }>(`${this.apiBaseUrl}/posts/react`, { postId, kind }, { headers: this.authHeaders(token) })
+      this.http.post<{ ok: boolean }>(
+        `${this.apiBaseUrl}/posts/${postId}/react`,
+        { kind },
+        { headers: this.authHeaders(token) }
+      )
     );
   }
 
   listReplies(postId: string, limit = 20): Promise<RepliesResponse> {
-    return firstValueFrom(
-      this.http.post<RepliesResponse>(`${this.apiBaseUrl}/posts/replies/list`, { postId, limit })
-    );
+    const params = new HttpParams().set('limit', String(limit));
+    return firstValueFrom(this.http.get<RepliesResponse>(`${this.apiBaseUrl}/posts/${postId}/replies`, { params }));
   }
 
   createReply(token: string, postId: string, content: string): Promise<ReplyItem> {
     return firstValueFrom(
       this.http.post<ReplyItem>(
-        `${this.apiBaseUrl}/posts/replies/create`,
-        { postId, content },
+        `${this.apiBaseUrl}/posts/${postId}/replies`,
+        { content },
         { headers: this.authHeaders(token) }
       )
     );
@@ -130,11 +147,11 @@ export class ApiService {
     );
   }
 
-  reportPost(token: string, postId: string, reason: string): Promise<{ ok: boolean; autoHidden: boolean }> {
+  reportPost(token: string, postId: string, reason: string): Promise<{ ok: boolean; auto_hidden: boolean }> {
     return firstValueFrom(
-      this.http.post<{ ok: boolean; autoHidden: boolean }>(
-        `${this.apiBaseUrl}/posts/report`,
-        { postId, reason },
+      this.http.post<{ ok: boolean; auto_hidden: boolean }>(
+        `${this.apiBaseUrl}/posts/${postId}/report`,
+        { reason },
         { headers: this.authHeaders(token) }
       )
     );

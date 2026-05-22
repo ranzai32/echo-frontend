@@ -1,18 +1,23 @@
-import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PostItem, ReplyItem } from '../../core/models/post.model';
+import { ShareService } from '../../core/services/share.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { IconButtonComponent } from '../icon-button/icon-button.component';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-post-card',
   standalone: true,
-  imports: [FormsModule, AvatarComponent, IconButtonComponent],
+  imports: [FormsModule, AvatarComponent, IconButtonComponent, IconComponent],
   templateUrl: './post-card.component.html',
   styleUrl: './post-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PostCardComponent {
+  private readonly shareService = inject(ShareService);
+  readonly nativeShareAvailable = this.shareService.canUseNativeShare();
+
   readonly post = input.required<PostItem>();
   readonly replies = input<ReplyItem[]>([]);
   readonly showReplies = input(false);
@@ -36,6 +41,12 @@ export class PostCardComponent {
   readonly reportDialogOpen = signal(false);
   readonly reportSubmitting = signal(false);
   readonly reportError = signal('');
+  readonly shareDialogOpen = signal(false);
+  readonly shareUrl = signal('');
+  readonly shareLoading = signal(false);
+  readonly shareCopying = signal(false);
+  readonly shareCopied = signal(false);
+  readonly shareError = signal('');
   readonly editingReplyID = signal('');
   readonly activeSubReplyParentID = signal('');
   replyText = '';
@@ -93,9 +104,84 @@ export class PostCardComponent {
     this.postDeleted.emit(this.post().id);
   }
 
+  sharePost(): void {
+    this.shareError.set('');
+    this.shareCopied.set(false);
+    this.shareDialogOpen.set(true);
+    void this.loadShareUrl();
+  }
+
+  closeShareDialog(): void {
+    this.shareDialogOpen.set(false);
+    this.shareLoading.set(false);
+    this.shareCopying.set(false);
+    this.shareCopied.set(false);
+    this.shareError.set('');
+    this.shareUrl.set('');
+  }
+
+  async copyShareLink(): Promise<void> {
+    const url = this.shareUrl().trim();
+    if (!url || this.shareCopying()) {
+      return;
+    }
+
+    this.shareCopying.set(true);
+    this.shareError.set('');
+    try {
+      await this.shareService.copyUrl(url);
+      this.shareCopied.set(true);
+    } catch {
+      this.shareError.set('Could not copy link. Try again.');
+    } finally {
+      this.shareCopying.set(false);
+    }
+  }
+
+  async sendShareLink(): Promise<void> {
+    const url = this.shareUrl().trim();
+    if (!url) {
+      return;
+    }
+
+    this.shareError.set('');
+    try {
+      await this.shareService.nativeShare(url);
+      this.closeShareDialog();
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
+
+      this.shareError.set('Could not open share menu.');
+    }
+  }
+
+  sharePreview(): string {
+    const content = this.post().content.trim();
+    if (content.length <= 120) {
+      return content;
+    }
+
+    return `${content.slice(0, 120)}…`;
+  }
+
   reportPost(): void {
     this.reportError.set('');
     this.reportDialogOpen.set(true);
+  }
+
+  private async loadShareUrl(): Promise<void> {
+    this.shareLoading.set(true);
+    this.shareUrl.set('');
+    try {
+      const url = await this.shareService.getPostShareUrl(this.post().id);
+      this.shareUrl.set(url);
+    } catch {
+      this.shareError.set('Could not load share link.');
+    } finally {
+      this.shareLoading.set(false);
+    }
   }
 
   closeReportDialog(): void {

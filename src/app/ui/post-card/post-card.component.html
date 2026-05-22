@@ -17,6 +17,7 @@
     <app-icon-button icon="heart" label="{{ post().score }}" [active]="likedByMe()" (clicked)="like()" />
     <app-icon-button icon="reply" label="{{ post().replyCount }}" (clicked)="toggleReply()" />
     <app-icon-button icon="flag" label="report" (clicked)="reportPost()" />
+    <app-icon-button icon="send" label="share" [active]="shareDialogOpen()" (clicked)="sharePost()" />
     @if (isOwnPost()) {
       <app-icon-button icon="trash" label="delete" (clicked)="removePost()" />
     }
@@ -86,6 +87,87 @@
           }
         </article>
       }
+    </div>
+  }
+
+  @if (shareDialogOpen()) {
+    <div class="share-backdrop" role="presentation" (click)="closeShareDialog()">
+      <section
+        class="share-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="share-grabber" aria-hidden="true"></div>
+
+        <div class="share-header">
+          <div class="share-title-wrap">
+            <p class="eyebrow">Share post</p>
+            <h3 id="share-title">Send this anonymously</h3>
+          </div>
+          <button type="button" class="close-btn" aria-label="Close share dialog" (click)="closeShareDialog()">
+            ×
+          </button>
+        </div>
+
+        <article class="share-preview">
+          <div class="share-preview-head">
+            <app-avatar [pseudonym]="post().pseudonym" [size]="36" />
+            <strong>{{ post().pseudonym }}</strong>
+          </div>
+          <p>{{ sharePreview() }}</p>
+        </article>
+
+        <label class="share-url-label" for="share-url-{{ post().id }}">Post link</label>
+        <div class="share-url-row">
+          <input
+            id="share-url-{{ post().id }}"
+            class="share-url-input"
+            type="text"
+            readonly
+            [value]="shareUrl()"
+            [placeholder]="shareLoading() ? 'Preparing link...' : 'Link unavailable'"
+          />
+          <button
+            type="button"
+            class="share-copy-btn"
+            [disabled]="shareLoading() || !shareUrl() || shareCopying()"
+            (click)="copyShareLink()"
+          >
+            {{ shareCopied() ? 'Copied' : shareCopying() ? '...' : 'Copy' }}
+          </button>
+        </div>
+
+        @if (shareCopied()) {
+          <p class="share-success" role="status">
+            <span class="share-success-dot" aria-hidden="true"></span>
+            Link copied — paste it anywhere you want.
+          </p>
+        }
+
+        @if (shareError()) {
+          <p class="share-error">{{ shareError() }}</p>
+        }
+
+        <div class="share-actions">
+          @if (nativeShareAvailable) {
+            <button type="button" class="share-action primary" [disabled]="shareLoading() || !shareUrl()" (click)="sendShareLink()">
+              <app-icon name="send" [size]="18" />
+              Send to apps
+            </button>
+          }
+          <button
+            type="button"
+            class="share-action"
+            [class.primary]="!nativeShareAvailable"
+            [disabled]="shareLoading() || !shareUrl() || shareCopying()"
+            (click)="copyShareLink()"
+          >
+            Copy link
+          </button>
+        </div>
+      </section>
     </div>
   }
 
