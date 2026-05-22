@@ -4,7 +4,7 @@
   </button>
 
   @if (open()) {
-    <div class="emoji-panel" role="dialog" aria-label="Emoji picker">
+    <div class="emoji-panel" role="dialog" aria-label="Emoji picker" [ngStyle]="panelStyle()">
       <div class="emoji-grid">
         @for (code of codes; track code) {
           <button type="button" class="emoji-item" [attr.aria-label]="code" (click)="pick(code)">
