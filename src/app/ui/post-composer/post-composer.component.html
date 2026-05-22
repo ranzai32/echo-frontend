@@ -12,10 +12,18 @@
     ></textarea>
 
     <footer>
-      <button type="button" class="attach" aria-label="attach">
+      <label class="attach" aria-label="attach file">
         <app-icon name="attach" [size]="18" />
-      </button>
+        <input type="file" (change)="selectFile($event)" />
+      </label>
       <button type="button" class="post" (click)="submit()">Post</button>
     </footer>
+
+    @if (selectedFile) {
+      <div class="selected-file">
+        <span>{{ selectedFile.name }}</span>
+        <button type="button" aria-label="remove attached file" (click)="removeFile()">×</button>
+      </div>
+    }
   </div>
 </section>

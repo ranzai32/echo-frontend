@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { SessionService } from './session.service';
-import { PostItem, ReplyItem } from '../models/post.model';
+import { PostCreatePayload, PostItem, ReplyItem } from '../models/post.model';
 
 const SEEDED_KEY = 'echo.seeded';
 
@@ -66,13 +66,13 @@ export class FeedStateService {
     }
   }
 
-  async createPost(content: string): Promise<void> {
-    const trimmed = content.trim();
+  async createPost(payload: PostCreatePayload): Promise<void> {
+    const trimmed = payload.content.trim();
     if (!trimmed) {
       return;
     }
 
-    const created = await this.api.createPost(this.session.token(), trimmed);
+    const created = await this.api.createPost(this.session.token(), { content: trimmed, file: payload.file });
     this.prependUnique(created);
   }
 
@@ -233,7 +233,7 @@ export class FeedStateService {
 
     for (const content of contents) {
       const auth = await this.api.register();
-      await this.api.createPost(auth.token, content);
+      await this.api.createPost(auth.token, { content });
     }
 
     if (typeof localStorage !== 'undefined') {

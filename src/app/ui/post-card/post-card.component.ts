@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PostItem, ReplyItem } from '../../core/models/post.model';
+import { ApiService } from '../../core/services/api.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { IconButtonComponent } from '../icon-button/icon-button.component';
 
@@ -52,12 +53,28 @@ export class PostCardComponent {
     'Other'
   ];
 
-  constructor() {
+  constructor(private readonly api: ApiService) {
     effect(() => {
       if (this.showReplies()) {
         this.showRepliesPanel.set(true);
       }
     }, { allowSignalWrites: true });
+  }
+
+  attachmentUrl(id: string): string {
+    return this.api.attachmentUrl(id);
+  }
+
+  isImage(contentType: string): boolean {
+    return contentType.startsWith('image/');
+  }
+
+  formatSize(size: number): string {
+    if (size >= 1024 * 1024) {
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
   }
 
   open(): void {
