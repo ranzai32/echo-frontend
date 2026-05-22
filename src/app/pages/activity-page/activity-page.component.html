@@ -17,6 +17,7 @@
       [likedByMe]="state.likedPostIDs().has(post.id)"
       [replies]="[]"
       (openPost)="openPost($event)"
+      (liked)="onLike($event)"
     />
   }
 </section>

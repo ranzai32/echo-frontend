@@ -85,19 +85,34 @@ export class FeedStateService {
     await this.api.reportPost(this.session.token(), postId, reason);
   }
 
-  async reactUpvote(postId: string): Promise<void> {
-    if (this.likedPostIDs().has(postId)) {
-      return;
-    }
+  async togglePostLike(postId: string): Promise<void> {
+    const liked = this.likedPostIDs().has(postId);
 
     try {
-      await this.api.react(this.session.token(), postId, 'upvote');
-      this.posts.update((items) => items.map((p) => (p.id === postId ? { ...p, score: p.score + 1 } : p)));
-      this.likedPostIDs.update((prev) => new Set(prev).add(postId));
+      if (liked) {
+        await this.api.unreactPost(this.session.token(), postId);
+        this.setPostLiked(postId, false);
+      } else {
+        await this.api.react(this.session.token(), postId, 'upvote');
+        this.setPostLiked(postId, true);
+      }
     } catch (error) {
-      if (error instanceof HttpErrorResponse && error.status === 409) {
-        this.likedPostIDs.update((prev) => new Set(prev).add(postId));
+      if (!liked && error instanceof HttpErrorResponse && error.status === 409) {
+        this.setPostLiked(postId, true);
         return;
+      }
+
+      if (liked) {
+        try {
+          await this.api.react(this.session.token(), postId, 'upvote');
+          this.setPostLiked(postId, false);
+          return;
+        } catch (retryError) {
+          if (retryError instanceof HttpErrorResponse && retryError.status === 409) {
+            this.setPostLiked(postId, false);
+            return;
+          }
+        }
       }
 
       throw error;
@@ -148,18 +163,35 @@ export class FeedStateService {
     this.posts.update((items) => items.map((item) => (item.id === postId ? post : item)));
   }
 
-  async reactReplyUpvote(replyId: string): Promise<void> {
-    if (this.likedReplyIDs().has(replyId)) {
-      return;
-    }
+  async toggleReplyLike(replyId: string): Promise<void> {
+    const liked = this.likedReplyIDs().has(replyId);
 
     try {
-      await this.api.reactReply(this.session.token(), replyId, 'upvote');
-      this.likedReplyIDs.update((prev) => new Set(prev).add(replyId));
-    } catch (error) {
-      if (error instanceof HttpErrorResponse && error.status === 409) {
-        this.likedReplyIDs.update((prev) => new Set(prev).add(replyId));
+      if (liked) {
+        await this.api.unreactReply(this.session.token(), replyId);
+        this.setReplyLiked(replyId, false);
         return;
+      }
+
+      await this.api.reactReply(this.session.token(), replyId, 'upvote');
+      this.setReplyLiked(replyId, true);
+    } catch (error) {
+      if (!liked && error instanceof HttpErrorResponse && error.status === 409) {
+        this.setReplyLiked(replyId, true);
+        return;
+      }
+
+      if (liked) {
+        try {
+          await this.api.reactReply(this.session.token(), replyId, 'upvote');
+          this.setReplyLiked(replyId, false);
+          return;
+        } catch (retryError) {
+          if (retryError instanceof HttpErrorResponse && retryError.status === 409) {
+            this.setReplyLiked(replyId, false);
+            return;
+          }
+        }
       }
 
       throw error;
@@ -242,6 +274,43 @@ export class FeedStateService {
       this.ws = undefined;
       setTimeout(() => this.connectWs(), 1500);
     };
+  }
+
+  private setPostLiked(postId: string, liked: boolean): void {
+    this.posts.update((items) =>
+      items.map((post) => {
+        if (post.id !== postId) {
+          return post;
+        }
+
+        const delta = liked ? 1 : -1;
+        return { ...post, score: Math.max(0, post.score + delta) };
+      })
+    );
+
+    this.likedPostIDs.update((prev) => {
+      const next = new Set(prev);
+      if (liked) {
+        next.add(postId);
+      } else {
+        next.delete(postId);
+      }
+
+      return next;
+    });
+  }
+
+  private setReplyLiked(replyId: string, liked: boolean): void {
+    this.likedReplyIDs.update((prev) => {
+      const next = new Set(prev);
+      if (liked) {
+        next.add(replyId);
+      } else {
+        next.delete(replyId);
+      }
+
+      return next;
+    });
   }
 
   private prependUnique(post: PostItem): void {

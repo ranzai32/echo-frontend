@@ -30,6 +30,15 @@ export class ActivityPageComponent implements OnInit {
     this.loading.set(false);
   }
 
+  async onLike(postID: string): Promise<void> {
+    const wasLiked = this.state.likedPostIDs().has(postID);
+    await this.state.togglePostLike(postID);
+    const delta = wasLiked ? -1 : 1;
+    this.posts.update((items) =>
+      items.map((post) => (post.id === postID ? { ...post, score: Math.max(0, post.score + delta) } : post))
+    );
+  }
+
   openPost(postID: string): void {
     void this.router.navigate(['/post', postID]);
   }

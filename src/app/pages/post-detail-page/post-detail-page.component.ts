@@ -57,7 +57,7 @@ export class PostDetailPageComponent implements OnInit {
       return;
     }
 
-    await this.state.reactUpvote(post.id);
+    await this.state.togglePostLike(post.id);
     await this.load();
   }
 
@@ -83,7 +83,7 @@ export class PostDetailPageComponent implements OnInit {
   }
 
   async onLikeReply(event: { postId: string; replyId: string }): Promise<void> {
-    await this.state.reactReplyUpvote(event.replyId);
+    await this.state.toggleReplyLike(event.replyId);
     await this.load();
   }
 
