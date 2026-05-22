@@ -25,7 +25,15 @@
 
   @if (activeTab() === 'posts') {
     @for (post of myPosts(); track post.id) {
-      <app-post-card [post]="post" />
+      <app-post-card
+        [post]="post"
+        [currentUserID]="session.userID()"
+        [isOwnPost]="post.authorId === session.userID()"
+        [likedByMe]="state.likedPostIDs().has(post.id)"
+        (openPost)="openPost($event)"
+        (liked)="onLike($event)"
+        (postDeleted)="onPostDeleted($event)"
+      />
     }
   } @else {
     @if (myReplies().length === 0) {
@@ -33,7 +41,13 @@
     }
 
     @for (reply of myReplies(); track reply.id) {
-      <article class="reply">
+      <article
+        class="reply"
+        role="button"
+        tabindex="0"
+        (click)="openPost(reply.postId)"
+        (keydown.enter)="openPost(reply.postId)"
+      >
         <p>{{ reply.content }}</p>
         <time>{{ reply.createdAt | date:'d MMM yyyy, HH:mm' }}</time>
       </article>

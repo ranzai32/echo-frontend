@@ -94,10 +94,6 @@ export class PostCardComponent {
   }
 
   like(): void {
-    if (this.likedByMe()) {
-      return;
-    }
-
     this.liked.emit(this.post().id);
   }
 
@@ -256,10 +252,6 @@ export class PostCardComponent {
   }
 
   likeReply(replyID: string): void {
-    if (this.likedReplyIDs().has(replyID)) {
-      return;
-    }
-
     this.replyLiked.emit(replyID);
   }
 

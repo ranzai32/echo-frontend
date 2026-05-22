@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
+import { firstValueFrom, Observable } from 'rxjs';
 import {
   FeedLatestResponse,
   FeedTrendingResponse,
@@ -98,13 +98,35 @@ export class ApiService {
   }
 
   react(token: string, postId: string, kind: ReactionKind): Promise<{ ok: boolean }> {
-    return firstValueFrom(
-      this.http.post<{ ok: boolean }>(
-        `${this.apiBaseUrl}/posts/${postId}/react`,
-        { kind },
-        { headers: this.authHeaders(token) }
-      )
+    return this.postWithLegacyFallback(
+      () =>
+        this.http.post<{ ok: boolean }>(
+          `${this.apiBaseUrl}/posts/${postId}/react`,
+          { kind },
+          { headers: this.authHeaders(token) }
+        ),
+      () =>
+        this.http.post<{ ok: boolean }>(
+          `${this.apiBaseUrl}/posts/react`,
+          { postId, kind },
+          { headers: this.authHeaders(token) }
+        )
     );
+  }
+
+  unreactPost(token: string, postId: string): Promise<{ ok: boolean }> {
+    const headers = this.authHeaders(token);
+    return this.requestCascade<{ ok: boolean }>([
+      () => this.http.delete<{ ok: boolean }>(`${this.apiBaseUrl}/posts/${postId}/react`, { headers }),
+      () =>
+        this.http.post<{ ok: boolean }>(`${this.apiBaseUrl}/posts/${postId}/react`, { kind: 'upvote' }, { headers }),
+      () =>
+        this.http.post<{ ok: boolean }>(
+          `${this.apiBaseUrl}/posts/react`,
+          { postId, kind: 'upvote' },
+          { headers }
+        )
+    ]);
   }
 
   listReplies(postId: string, limit = 20): Promise<RepliesResponse> {
@@ -153,13 +175,39 @@ export class ApiService {
   }
 
   reactReply(token: string, replyId: string, kind: ReactionKind): Promise<{ ok: boolean }> {
-    return firstValueFrom(
-      this.http.post<{ ok: boolean }>(
-        `${this.apiBaseUrl}/posts/replies/react`,
-        { replyId, kind },
-        { headers: this.authHeaders(token) }
-      )
+    return this.postWithLegacyFallback(
+      () =>
+        this.http.post<{ ok: boolean }>(
+          `${this.apiBaseUrl}/posts/replies/${replyId}/react`,
+          { kind },
+          { headers: this.authHeaders(token) }
+        ),
+      () =>
+        this.http.post<{ ok: boolean }>(
+          `${this.apiBaseUrl}/posts/replies/react`,
+          { replyId, kind },
+          { headers: this.authHeaders(token) }
+        )
     );
+  }
+
+  unreactReply(token: string, replyId: string): Promise<{ ok: boolean }> {
+    const headers = this.authHeaders(token);
+    return this.requestCascade<{ ok: boolean }>([
+      () => this.http.delete<{ ok: boolean }>(`${this.apiBaseUrl}/posts/replies/${replyId}/react`, { headers }),
+      () =>
+        this.http.post<{ ok: boolean }>(
+          `${this.apiBaseUrl}/posts/replies/${replyId}/react`,
+          { kind: 'upvote' },
+          { headers }
+        ),
+      () =>
+        this.http.post<{ ok: boolean }>(
+          `${this.apiBaseUrl}/posts/replies/react`,
+          { replyId, kind: 'upvote' },
+          { headers }
+        )
+    ]);
   }
 
   reportPost(token: string, postId: string, reason: string): Promise<{ ok: boolean; auto_hidden: boolean }> {
@@ -182,5 +230,43 @@ export class ApiService {
 
   private authHeaders(token: string): HttpHeaders {
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+
+  private postWithLegacyFallback<T>(primary: () => Observable<T>, legacy: () => Observable<T>): Promise<T> {
+    return firstValueFrom(primary()).catch((error) => {
+      if (this.shouldTryLegacy(error)) {
+        return firstValueFrom(legacy());
+      }
+
+      throw error;
+    });
+  }
+
+  private requestCascade<T>(attempts: Array<() => Observable<T>>): Promise<T> {
+    const run = async (index: number, lastError: unknown): Promise<T> => {
+      if (index >= attempts.length) {
+        throw lastError;
+      }
+
+      try {
+        return await firstValueFrom(attempts[index]());
+      } catch (error) {
+        if (this.shouldTryNextAttempt(error)) {
+          return run(index + 1, error);
+        }
+
+        throw error;
+      }
+    };
+
+    return run(0, new Error('No reaction request attempts configured.'));
+  }
+
+  private shouldTryLegacy(error: unknown): boolean {
+    return this.shouldTryNextAttempt(error);
+  }
+
+  private shouldTryNextAttempt(error: unknown): boolean {
+    return error instanceof HttpErrorResponse && (error.status === 404 || error.status === 405);
   }
 }

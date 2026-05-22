@@ -73,7 +73,7 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async onLike(postID: string): Promise<void> {
-    await this.state.reactUpvote(postID);
+    await this.state.togglePostLike(postID);
   }
 
   async onReply(event: { postId: string; content: string }): Promise<void> {
@@ -112,10 +112,13 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async onLikeReply(event: { postId: string; replyId: string }): Promise<void> {
-    await this.state.reactReplyUpvote(event.replyId);
+    const wasLiked = this.likedReplyIDs().has(event.replyId);
+    await this.state.toggleReplyLike(event.replyId);
+    const delta = wasLiked ? -1 : 1;
+
     this.repliesByPost.update((items) => {
       const next = [...(items[event.postId] ?? [])].map((reply) =>
-        reply.id === event.replyId ? { ...reply, score: reply.score + 1 } : reply
+        reply.id === event.replyId ? { ...reply, score: Math.max(0, reply.score + delta) } : reply
       );
       return { ...items, [event.postId]: next };
     });
