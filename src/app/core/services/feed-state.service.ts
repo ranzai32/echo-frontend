@@ -58,8 +58,9 @@ export class FeedStateService {
 
     this.loadingMore.set(true);
     try {
-      const data = await this.api.latest(10, this.cursor);
+      const data = await this.api.latest(10, this.cursor, this.session.token());
       this.posts.update((prev) => [...prev, ...data.posts]);
+      this.syncLikedPostsFromItems(data.posts);
       this.cursor = data.next_cursor;
     } finally {
       this.loadingMore.set(false);
@@ -209,12 +210,31 @@ export class FeedStateService {
   }
 
   async getPost(postId: string): Promise<PostItem> {
-    return this.api.getPost(postId);
+    const post = await this.api.getPost(postId, this.session.token());
+    this.syncLikedPostsFromItems([post]);
+    return post;
   }
 
   async fetchReplies(postId: string): Promise<ReplyItem[]> {
-    const data = await this.api.listReplies(postId, 100);
-    return this.buildReplyTree(data.replies);
+    const data = await this.api.listReplies(postId, 100, this.session.token());
+    const replies = this.buildReplyTree(data.replies);
+    this.syncLikedRepliesFromItems(replies);
+    return replies;
+  }
+
+  bumpReplyScoreInTree(replies: ReplyItem[], replyId: string, delta: number): ReplyItem[] {
+    return replies.map((reply) => {
+      const children = reply.children?.length ? this.bumpReplyScoreInTree(reply.children, replyId, delta) : reply.children;
+      if (reply.id === replyId) {
+        return { ...reply, score: Math.max(0, reply.score + delta), children };
+      }
+
+      if (children !== reply.children) {
+        return { ...reply, children };
+      }
+
+      return reply;
+    });
   }
 
   private buildReplyTree(replies: ReplyItem[]): ReplyItem[] {
@@ -245,13 +265,14 @@ export class FeedStateService {
   }
 
   private async loadLatest(reset: boolean): Promise<void> {
-    const data = await this.api.latest(10);
+    const data = await this.api.latest(10, '', this.session.token());
     if (reset) {
       this.posts.set(data.posts);
     } else {
       this.posts.update((prev) => [...prev, ...data.posts]);
     }
 
+    this.syncLikedPostsFromItems(data.posts);
     this.cursor = data.next_cursor;
   }
 
@@ -311,6 +332,44 @@ export class FeedStateService {
 
       return next;
     });
+  }
+
+  private syncLikedPostsFromItems(posts: PostItem[]): void {
+    this.likedPostIDs.update((prev) => {
+      const next = new Set(prev);
+      for (const post of posts) {
+        if (post.likedByMe) {
+          next.add(post.id);
+        } else if (post.likedByMe === false) {
+          next.delete(post.id);
+        }
+      }
+
+      return next;
+    });
+  }
+
+  private syncLikedRepliesFromItems(replies: ReplyItem[]): void {
+    const walk = (items: ReplyItem[]): void => {
+      for (const reply of items) {
+        this.likedReplyIDs.update((prev) => {
+          const next = new Set(prev);
+          if (reply.likedByMe) {
+            next.add(reply.id);
+          } else if (reply.likedByMe === false) {
+            next.delete(reply.id);
+          }
+
+          return next;
+        });
+
+        if (reply.children?.length) {
+          walk(reply.children);
+        }
+      }
+    };
+
+    walk(replies);
   }
 
   private prependUnique(post: PostItem): void {

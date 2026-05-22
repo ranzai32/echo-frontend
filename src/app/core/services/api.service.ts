@@ -43,13 +43,14 @@ export class ApiService {
     );
   }
 
-  latest(limit: number, cursor = ''): Promise<FeedLatestResponse> {
+  latest(limit: number, cursor = '', token = ''): Promise<FeedLatestResponse> {
     let params = new HttpParams().set('limit', String(limit));
     if (cursor) {
       params = params.set('cursor', cursor);
     }
 
-    return firstValueFrom(this.http.get<FeedLatestResponse>(`${this.apiBaseUrl}/feed/latest`, { params }));
+    const options = token ? { params, headers: this.authHeaders(token) } : { params };
+    return firstValueFrom(this.http.get<FeedLatestResponse>(`${this.apiBaseUrl}/feed/latest`, options));
   }
 
   trending(limit: number): Promise<FeedTrendingResponse> {
@@ -77,8 +78,9 @@ export class ApiService {
     return `${this.apiBaseUrl}/posts/attachments/${id}`;
   }
 
-  getPost(id: string): Promise<PostItem> {
-    return firstValueFrom(this.http.get<PostItem>(`${this.apiBaseUrl}/posts/${id}`));
+  getPost(id: string, token = ''): Promise<PostItem> {
+    const options = token ? { headers: this.authHeaders(token) } : {};
+    return firstValueFrom(this.http.get<PostItem>(`${this.apiBaseUrl}/posts/${id}`, options));
   }
 
   getShareUrl(postId: string): Promise<string> {
@@ -116,22 +118,13 @@ export class ApiService {
 
   unreactPost(token: string, postId: string): Promise<{ ok: boolean }> {
     const headers = this.authHeaders(token);
-    return this.requestCascade<{ ok: boolean }>([
-      () => this.http.delete<{ ok: boolean }>(`${this.apiBaseUrl}/posts/${postId}/react`, { headers }),
-      () =>
-        this.http.post<{ ok: boolean }>(`${this.apiBaseUrl}/posts/${postId}/react`, { kind: 'upvote' }, { headers }),
-      () =>
-        this.http.post<{ ok: boolean }>(
-          `${this.apiBaseUrl}/posts/react`,
-          { postId, kind: 'upvote' },
-          { headers }
-        )
-    ]);
+    return firstValueFrom(this.http.delete<{ ok: boolean }>(`${this.apiBaseUrl}/posts/${postId}/react`, { headers }));
   }
 
-  listReplies(postId: string, limit = 20): Promise<RepliesResponse> {
+  listReplies(postId: string, limit = 20, token = ''): Promise<RepliesResponse> {
     const params = new HttpParams().set('limit', String(limit));
-    return firstValueFrom(this.http.get<RepliesResponse>(`${this.apiBaseUrl}/posts/${postId}/replies`, { params }));
+    const options = token ? { params, headers: this.authHeaders(token) } : { params };
+    return firstValueFrom(this.http.get<RepliesResponse>(`${this.apiBaseUrl}/posts/${postId}/replies`, options));
   }
 
   createReply(token: string, postId: string, content: string): Promise<ReplyItem> {
@@ -193,21 +186,9 @@ export class ApiService {
 
   unreactReply(token: string, replyId: string): Promise<{ ok: boolean }> {
     const headers = this.authHeaders(token);
-    return this.requestCascade<{ ok: boolean }>([
-      () => this.http.delete<{ ok: boolean }>(`${this.apiBaseUrl}/posts/replies/${replyId}/react`, { headers }),
-      () =>
-        this.http.post<{ ok: boolean }>(
-          `${this.apiBaseUrl}/posts/replies/${replyId}/react`,
-          { kind: 'upvote' },
-          { headers }
-        ),
-      () =>
-        this.http.post<{ ok: boolean }>(
-          `${this.apiBaseUrl}/posts/replies/react`,
-          { replyId, kind: 'upvote' },
-          { headers }
-        )
-    ]);
+    return firstValueFrom(
+      this.http.delete<{ ok: boolean }>(`${this.apiBaseUrl}/posts/replies/${replyId}/react`, { headers })
+    );
   }
 
   reportPost(token: string, postId: string, reason: string): Promise<{ ok: boolean; auto_hidden: boolean }> {

@@ -10,6 +10,7 @@ export interface PostItem {
   attachment?: PostAttachment;
   replyCount: number;
   score: number;
+  likedByMe?: boolean;
   createdAt: string;
 }
 
@@ -35,6 +36,7 @@ export interface ReplyItem {
   pseudonym: string;
   content: string;
   score: number;
+  likedByMe?: boolean;
   createdAt: string;
   children?: ReplyItem[];
 }

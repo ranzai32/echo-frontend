@@ -116,12 +116,10 @@ export class FeedPageComponent implements OnInit, AfterViewInit, OnDestroy {
     await this.state.toggleReplyLike(event.replyId);
     const delta = wasLiked ? -1 : 1;
 
-    this.repliesByPost.update((items) => {
-      const next = [...(items[event.postId] ?? [])].map((reply) =>
-        reply.id === event.replyId ? { ...reply, score: Math.max(0, reply.score + delta) } : reply
-      );
-      return { ...items, [event.postId]: next };
-    });
+    this.repliesByPost.update((items) => ({
+      ...items,
+      [event.postId]: this.state.bumpReplyScoreInTree(items[event.postId] ?? [], event.replyId, delta)
+    }));
   }
 
   openPost(postID: string): void {

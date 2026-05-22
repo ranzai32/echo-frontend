@@ -57,8 +57,10 @@ export class PostDetailPageComponent implements OnInit {
       return;
     }
 
+    const wasLiked = this.state.likedPostIDs().has(post.id);
     await this.state.togglePostLike(post.id);
-    await this.load();
+    const delta = wasLiked ? -1 : 1;
+    this.post.set({ ...post, score: Math.max(0, post.score + delta), likedByMe: !wasLiked });
   }
 
   async onReply(event: { postId: string; content: string }): Promise<void> {
@@ -83,8 +85,10 @@ export class PostDetailPageComponent implements OnInit {
   }
 
   async onLikeReply(event: { postId: string; replyId: string }): Promise<void> {
+    const wasLiked = this.state.likedReplyIDs().has(event.replyId);
     await this.state.toggleReplyLike(event.replyId);
-    await this.load();
+    const delta = wasLiked ? -1 : 1;
+    this.replies.update((items) => this.state.bumpReplyScoreInTree(items, event.replyId, delta));
   }
 
   async onDeletePost(postID: string): Promise<void> {
