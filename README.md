@@ -42,6 +42,8 @@ ICQ-style emoticons live in `public/emojis/` (light/dark skins). In posts and re
 
 Open `/admin/login` in the browser. Credentials come from backend env vars `ADMIN_USERNAME` and `ADMIN_PASSWORD` (see echo-backend `.env.example`). After login, `/admin` lists open reports with actions: dismiss, hide post, ban author.
 
+Production nginx for the static bundle must use `deploy/nginx.conf` (SPA `try_files` without `$uri/` redirects). Mount it as `/etc/nginx/conf.d/default.conf` in the `echo-frontend-web` container.
+
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
 ## Running unit tests

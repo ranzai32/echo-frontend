@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { insertEmojiToken } from '../../core/emoji/emoji-text';
 import { PostItem, ReplyItem } from '../../core/models/post.model';
 import { ApiService } from '../../core/services/api.service';
+import { FeedStateService } from '../../core/services/feed-state.service';
 import { ShareService } from '../../core/services/share.service';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { EmojiContentComponent } from '../emoji-content/emoji-content.component';
@@ -30,6 +31,7 @@ import { IconComponent } from '../icon/icon.component';
 })
 export class PostCardComponent {
   private readonly shareService = inject(ShareService);
+  private readonly feedState = inject(FeedStateService);
   readonly nativeShareAvailable = this.shareService.canUseNativeShare();
 
   readonly post = input.required<PostItem>();
@@ -221,7 +223,7 @@ export class PostCardComponent {
     this.reportReason = reason;
   }
 
-  submitReport(): void {
+  async submitReport(): Promise<void> {
     const reason = this.reportReason.trim();
     if (!reason) {
       this.reportError.set('Please choose or enter a reason.');
@@ -229,8 +231,16 @@ export class PostCardComponent {
     }
 
     this.reportSubmitting.set(true);
-    this.postReported.emit({ postId: this.post().id, reason });
-    this.closeReportDialog();
+    this.reportError.set('');
+
+    try {
+      await this.feedState.reportPost(this.post().id, reason);
+      this.postReported.emit({ postId: this.post().id, reason });
+      this.closeReportDialog();
+    } catch {
+      this.reportError.set('Не удалось отправить жалобу. Попробуйте ещё раз.');
+      this.reportSubmitting.set(false);
+    }
   }
 
   isOwnReply(reply: ReplyItem): boolean {
