@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { PostCreatePayload } from '../../core/models/post.model';
 import { AvatarComponent } from '../avatar/avatar.component';
 import { IconComponent } from '../icon/icon.component';
 
@@ -13,8 +14,9 @@ import { IconComponent } from '../icon/icon.component';
 })
 export class PostComposerComponent {
   readonly pseudonym = input('anonymous');
-  readonly submitted = output<string>();
+  readonly submitted = output<PostCreatePayload>();
   content = '';
+  selectedFile?: File;
 
   resize(textarea: HTMLTextAreaElement): void {
     textarea.style.height = '0';
@@ -27,7 +29,18 @@ export class PostComposerComponent {
       return;
     }
 
-    this.submitted.emit(trimmed);
+    this.submitted.emit({ content: trimmed, file: this.selectedFile });
     this.content = '';
+    this.selectedFile = undefined;
+  }
+
+  selectFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.selectedFile = input.files?.[0];
+    input.value = '';
+  }
+
+  removeFile(): void {
+    this.selectedFile = undefined;
   }
 }

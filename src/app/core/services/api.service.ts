@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import {
   FeedLatestResponse,
   FeedTrendingResponse,
+  PostCreatePayload,
   PostItem,
   ReactionKind,
   SearchPostsResponse,
@@ -48,10 +49,24 @@ export class ApiService {
     return firstValueFrom(this.http.post<FeedTrendingResponse>(`${this.apiBaseUrl}/feed/trending`, { limit }));
   }
 
-  createPost(token: string, content: string): Promise<PostItem> {
+  createPost(token: string, payload: PostCreatePayload): Promise<PostItem> {
+    if (payload.file) {
+      const body = new FormData();
+      body.append('content', payload.content);
+      body.append('file', payload.file);
+
+      return firstValueFrom(
+        this.http.post<PostItem>(`${this.apiBaseUrl}/posts`, body, { headers: this.authHeaders(token) })
+      );
+    }
+
     return firstValueFrom(
-      this.http.post<PostItem>(`${this.apiBaseUrl}/posts`, { content }, { headers: this.authHeaders(token) })
+      this.http.post<PostItem>(`${this.apiBaseUrl}/posts`, { content: payload.content }, { headers: this.authHeaders(token) })
     );
+  }
+
+  attachmentUrl(id: string): string {
+    return `${this.apiBaseUrl}/posts/attachments/${id}`;
   }
 
   getPost(id: string): Promise<PostItem> {

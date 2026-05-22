@@ -11,6 +11,25 @@
     </div>
 
     <p class="content">{{ post().content }}</p>
+
+    @if (post().attachment; as attachment) {
+      <a
+        class="attachment"
+        [href]="attachmentUrl(attachment.id)"
+        target="_blank"
+        rel="noopener"
+        (click)="$event.stopPropagation()"
+      >
+        @if (isImage(attachment.contentType)) {
+          <img [src]="attachmentUrl(attachment.id)" [alt]="attachment.fileName" />
+        }
+
+        <span class="attachment-meta">
+          <strong>{{ attachment.fileName }}</strong>
+          <small>{{ formatSize(attachment.size) }}</small>
+        </span>
+      </a>
+    }
   </div>
 
   <div class="post-actions">
