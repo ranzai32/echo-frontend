@@ -1,0 +1,74 @@
+<section class="admin-page page-enter">
+  <header class="admin-header">
+    <div>
+      <p class="eyebrow">Echo moderation</p>
+      <h1>Жалобы</h1>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="ghost" (click)="load()" [disabled]="loading()">Обновить</button>
+      <button type="button" class="ghost" (click)="logout()">Выйти</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="status">Загрузка...</p>
+  } @else if (error()) {
+    <p class="status error">{{ error() }}</p>
+  } @else if (reports().length === 0) {
+    <p class="status">Открытых жалоб нет.</p>
+  } @else {
+    <div class="report-list">
+      @for (report of reports(); track report.id) {
+        <article class="report-card">
+          <div class="report-meta">
+            <span>{{ report.createdAt | date: 'short' }}</span>
+            @if (report.postHidden) {
+              <span class="badge hidden">Скрыт</span>
+            }
+          </div>
+
+          <p class="reason"><strong>Причина:</strong> {{ report.reason }}</p>
+
+          <div class="post-preview">
+            <p class="pseudonym">{{ report.postPseudonym || 'anonymous' }}</p>
+            <p class="content">{{ report.postContent || '—' }}</p>
+          </div>
+
+          <div class="links">
+            <a [href]="postUrl(report.postId)" target="_blank" rel="noopener">Открыть пост</a>
+            <span class="post-id">ID: {{ report.postId }}</span>
+          </div>
+
+          <div class="actions">
+            <button
+              type="button"
+              class="ghost"
+              [disabled]="actingId() === report.id"
+              (click)="act(report, 'dismiss')"
+            >
+              Отклонить
+            </button>
+            <button
+              type="button"
+              class="warn"
+              [disabled]="actingId() === report.id"
+              (click)="act(report, 'hide')"
+            >
+              Скрыть пост
+            </button>
+            <button
+              type="button"
+              class="danger"
+              [disabled]="actingId() === report.id"
+              (click)="act(report, 'ban')"
+            >
+              Забанить автора
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  <a routerLink="/" class="back-link">← На главную</a>
+</section>

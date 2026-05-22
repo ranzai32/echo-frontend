@@ -1,0 +1,35 @@
+<section class="admin-login page-enter">
+  <div class="card">
+    <p class="eyebrow">Echo moderation</p>
+    <h1>Вход в админку</h1>
+    <p class="hint">Доступ только для модераторов платформы.</p>
+
+    <form (ngSubmit)="submit()">
+      <label>
+        <span>Логин</span>
+        <input type="text" name="username" autocomplete="username" [(ngModel)]="username" [disabled]="loading()" />
+      </label>
+
+      <label>
+        <span>Пароль</span>
+        <input
+          type="password"
+          name="password"
+          autocomplete="current-password"
+          [(ngModel)]="password"
+          [disabled]="loading()"
+        />
+      </label>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <button type="submit" class="primary" [disabled]="loading()">
+        {{ loading() ? 'Вход...' : 'Войти' }}
+      </button>
+    </form>
+
+    <a routerLink="/" class="back-link">← На главную</a>
+  </div>
+</section>

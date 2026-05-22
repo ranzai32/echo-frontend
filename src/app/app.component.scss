@@ -21,6 +21,12 @@
 	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
 }
 
+.content-shell.admin-shell {
+	width: min(760px, 100%);
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
 app-top-bar,
 app-bottom-nav {
 	display: block;

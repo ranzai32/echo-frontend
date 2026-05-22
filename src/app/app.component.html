@@ -1,11 +1,15 @@
 <div class="app-shell" [class.dark]="dark()">
-  <app-top-bar [dark]="dark()" (darkToggle)="toggleTheme()" />
+  @if (!hideChrome()) {
+    <app-top-bar [dark]="dark()" (darkToggle)="toggleTheme()" />
+  }
 
-  <main class="content-shell">
+  <main class="content-shell" [class.admin-shell]="hideChrome()">
     <router-outlet />
   </main>
 
-  <app-bottom-nav />
+  @if (!hideChrome()) {
+    <app-bottom-nav />
+  }
 </div>
 
 @if (false) {

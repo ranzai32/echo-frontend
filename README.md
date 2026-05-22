@@ -38,6 +38,10 @@ Production uses `src/environments/environment.prod.ts` (API/APP URLs for VPS). L
 
 ICQ-style emoticons live in `public/emojis/` (light/dark skins). In posts and replies, pick them with the ☺ button; they are stored as tokens like `:biggrin:` and rendered as GIFs.
 
+## Admin moderation UI
+
+Open `/admin/login` in the browser. Credentials come from backend env vars `ADMIN_USERNAME` and `ADMIN_PASSWORD` (see echo-backend `.env.example`). After login, `/admin` lists open reports with actions: dismiss, hide post, ban author.
+
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
 ## Running unit tests
