@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { SessionService } from './session.service';
+import { FeedRealtimeEvent } from '../models/feed-realtime.model';
 import { PostCreatePayload, PostItem, ReplyItem } from '../models/post.model';
 
 const SEEDED_KEY = 'echo.seeded';
@@ -15,6 +16,7 @@ export class FeedStateService {
   readonly loadingInitial = signal(true);
   readonly loadingMore = signal(false);
   readonly error = signal('');
+  readonly realtimeEvent = signal<FeedRealtimeEvent | null>(null);
 
   private cursor = '';
   private ws?: WebSocket;
@@ -222,6 +224,65 @@ export class FeedStateService {
     return replies;
   }
 
+  mergeReplyIntoTree(replies: ReplyItem[], reply: ReplyItem): ReplyItem[] {
+    if (replies.some((item) => item.id === reply.id)) {
+      return this.patchReplyInTree(replies, reply);
+    }
+
+    if (!reply.parentReplyId) {
+      return [...replies, { ...reply, children: reply.children ?? [] }];
+    }
+
+    const attached = this.attachReplyChild(replies, reply.parentReplyId, { ...reply, children: reply.children ?? [] });
+    return attached ?? [...replies, { ...reply, children: reply.children ?? [] }];
+  }
+
+  patchReplyInTree(replies: ReplyItem[], reply: ReplyItem): ReplyItem[] {
+    return replies.map((item) => {
+      if (item.id === reply.id) {
+        return { ...item, ...reply, children: reply.children ?? item.children };
+      }
+
+      if (item.children?.length) {
+        return { ...item, children: this.patchReplyInTree(item.children, reply) };
+      }
+
+      return item;
+    });
+  }
+
+  removeReplyFromTree(replies: ReplyItem[], replyId: string): ReplyItem[] {
+    return replies
+      .filter((item) => item.id !== replyId)
+      .map((item) =>
+        item.children?.length ? { ...item, children: this.removeReplyFromTree(item.children, replyId) } : item
+      );
+  }
+
+  private attachReplyChild(replies: ReplyItem[], parentReplyId: string, reply: ReplyItem): ReplyItem[] | null {
+    let attached = false;
+
+    const next = replies.map((item) => {
+      if (item.id === parentReplyId) {
+        attached = true;
+        const children = [...(item.children ?? []), reply];
+        return { ...item, children };
+      }
+
+      if (item.children?.length) {
+        const children = this.attachReplyChild(item.children, parentReplyId, reply);
+        if (children) {
+          attached = true;
+          return { ...item, children };
+        }
+      }
+
+      return item;
+    });
+
+    return attached ? next : null;
+  }
+
   bumpReplyScoreInTree(replies: ReplyItem[], replyId: string, delta: number): ReplyItem[] {
     return replies.map((reply) => {
       const children = reply.children?.length ? this.bumpReplyScoreInTree(reply.children, replyId, delta) : reply.children;
@@ -284,8 +345,14 @@ export class FeedStateService {
     this.ws = new WebSocket(this.api.toWsFeedUrl());
     this.ws.onmessage = (event) => {
       try {
-        const post = JSON.parse(event.data) as PostItem;
-        this.prependUnique(post);
+        const parsed = JSON.parse(event.data) as PostItem | { type?: string; payload?: unknown };
+        const feedEvent = this.parseRealtimeMessage(parsed);
+        if (!feedEvent) {
+          return;
+        }
+
+        this.applyRealtimeEvent(feedEvent);
+        this.realtimeEvent.set(feedEvent);
       } catch {
         return;
       }
@@ -370,6 +437,106 @@ export class FeedStateService {
     };
 
     walk(replies);
+  }
+
+  private parseRealtimeMessage(raw: unknown): FeedRealtimeEvent | null {
+    if (!raw || typeof raw !== 'object') {
+      return null;
+    }
+
+    const record = raw as Record<string, unknown>;
+
+    if (typeof record['id'] === 'string' && typeof record['content'] === 'string' && typeof record['type'] !== 'string') {
+      return { type: 'post.created', post: raw as PostItem };
+    }
+
+    if (typeof record['type'] !== 'string' || record['payload'] === undefined) {
+      return null;
+    }
+
+    const payload = record['payload'] as Record<string, unknown>;
+
+    switch (record['type']) {
+      case 'post.created':
+        return { type: 'post.created', post: payload as unknown as PostItem };
+      case 'post.deleted':
+        return { type: 'post.deleted', postId: String(payload['postId'] ?? '') };
+      case 'post.updated':
+        return {
+          type: 'post.updated',
+          postId: String(payload['postId'] ?? ''),
+          score: Number(payload['score'] ?? 0),
+          replyCount: Number(payload['replyCount'] ?? 0)
+        };
+      case 'post.hidden':
+        return { type: 'post.hidden', postId: String(payload['postId'] ?? '') };
+      case 'reply.created':
+        return { type: 'reply.created', reply: payload as unknown as ReplyItem };
+      case 'reply.updated':
+        return { type: 'reply.updated', reply: payload as unknown as ReplyItem };
+      case 'reply.deleted':
+        return {
+          type: 'reply.deleted',
+          postId: String(payload['postId'] ?? ''),
+          replyId: String(payload['replyId'] ?? '')
+        };
+      default:
+        return null;
+    }
+  }
+
+  private applyRealtimeEvent(event: FeedRealtimeEvent): void {
+    switch (event.type) {
+      case 'post.created':
+        this.prependUnique(event.post);
+        break;
+      case 'post.deleted':
+      case 'post.hidden':
+        this.posts.update((items) => items.filter((item) => item.id !== event.postId));
+        break;
+      case 'post.updated':
+        this.posts.update((items) =>
+          items.map((post) =>
+            post.id === event.postId ? { ...post, score: event.score, replyCount: event.replyCount } : post
+          )
+        );
+        break;
+      case 'reply.created':
+        this.myReplies.update((items) => (items.some((item) => item.id === event.reply.id) ? items : [event.reply, ...items]));
+        this.bumpPostReplyCount(event.reply.postId, 1);
+        break;
+      case 'reply.updated':
+        this.patchReplyInMyReplies(event.reply);
+        break;
+      case 'reply.deleted':
+        this.myReplies.update((items) => items.filter((item) => item.id !== event.replyId));
+        this.bumpPostReplyCount(event.postId, -1);
+        break;
+    }
+  }
+
+  private bumpPostReplyCount(postId: string, delta: number): void {
+    if (!postId || delta === 0) {
+      return;
+    }
+
+    this.posts.update((items) =>
+      items.map((post) =>
+        post.id === postId ? { ...post, replyCount: Math.max(0, post.replyCount + delta) } : post
+      )
+    );
+  }
+
+  private patchReplyInMyReplies(reply: ReplyItem): void {
+    const hasContent = Boolean(reply.content?.trim());
+
+    this.myReplies.update((items) => {
+      if (!items.some((item) => item.id === reply.id)) {
+        return hasContent ? [reply, ...items] : items;
+      }
+
+      return items.map((item) => (item.id === reply.id ? { ...item, ...reply } : item));
+    });
   }
 
   private prependUnique(post: PostItem): void {
