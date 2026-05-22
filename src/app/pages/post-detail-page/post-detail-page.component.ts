@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FeedStateService } from '../../core/services/feed-state.service';
 import { SessionService } from '../../core/services/session.service';
@@ -23,47 +23,6 @@ export class PostDetailPageComponent implements OnInit {
   readonly replies = signal<ReplyItem[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
-
-  constructor() {
-    effect(() => {
-      const event = this.state.realtimeEvent();
-      const post = this.post();
-      if (!event || !post) {
-        return;
-      }
-
-      switch (event.type) {
-        case 'post.updated':
-          if (event.postId === post.id) {
-            this.post.set({ ...post, score: event.score, replyCount: event.replyCount });
-          }
-          break;
-        case 'post.deleted':
-        case 'post.hidden':
-          if (event.postId === post.id) {
-            void this.router.navigate(['/']);
-          }
-          break;
-        case 'reply.created':
-          if (event.reply.postId === post.id) {
-            this.replies.update((items) => this.state.mergeReplyIntoTree(items, event.reply));
-            this.post.set({ ...post, replyCount: post.replyCount + 1 });
-          }
-          break;
-        case 'reply.updated':
-          if (event.reply.postId === post.id) {
-            this.replies.update((items) => this.state.patchReplyInTree(items, event.reply));
-          }
-          break;
-        case 'reply.deleted':
-          if (event.postId === post.id) {
-            this.replies.update((items) => this.state.removeReplyFromTree(items, event.replyId));
-            this.post.set({ ...post, replyCount: Math.max(0, post.replyCount - 1) });
-          }
-          break;
-      }
-    });
-  }
 
   async ngOnInit(): Promise<void> {
     await this.session.ensureSession();
@@ -98,9 +57,10 @@ export class PostDetailPageComponent implements OnInit {
       return;
     }
 
+    const wasLiked = this.state.likedPostIDs().has(post.id);
     await this.state.togglePostLike(post.id);
-    const liked = this.state.likedPostIDs().has(post.id);
-    this.post.set({ ...post, likedByMe: liked });
+    const delta = wasLiked ? -1 : 1;
+    this.post.set({ ...post, score: Math.max(0, post.score + delta), likedByMe: !wasLiked });
   }
 
   async onReply(event: { postId: string; content: string }): Promise<void> {
